@@ -5,10 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js",
-    "build": "webpack",
-    "test": "npm run test",
-    "eject": "npm run eject"
+    "start": "node src/index.js"
   },
   "keywords": [],
   "author": "",
