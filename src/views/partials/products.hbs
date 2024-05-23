@@ -1,0 +1,99 @@
+{{>floatings}}
+
+{{#if productos}}
+<div class="row align-items-start d-sm-flex justify-content-between">
+    <table class="table col-md-9">
+        <thead class="thead-dark">
+            <tr>
+                <th class="bg-primary" scope="col">#</th>
+                <th class="bg-primary" scope="col">Nombre</th>
+                <th class="bg-primary" scope="col">Categoría</th>
+                <th class="bg-primary" scope="col">Precio</th>
+                <th class="bg-primary" scope="col">Cantidad</th>
+                <th class="bg-primary" scope="col">Fecha Venc.</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each productos}}
+            <tr style="line-height: 1;">
+                <th scope="row">{{id}}</th>
+                <td>{{nombre}}</td>
+                <td>{{categoría}}</td>
+                <td>{{precio}}</td>
+                <td>{{cantidad}}</td>
+                <td>{{fechav}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Filtrar</h5>
+                <!-- Filtros -->
+                <div class="form-group">
+                    <label for="cantidad">Cantidad</label>
+                    <select class="form-control" id="cantidad">
+                        <option value="Seleccione">Seleccione</option>
+                        <option value="Mayor">Mayor</option>
+                        <option value="Menor">Menor</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="fecha">Fecha</label>
+                    <select class="form-control" id="fecha">
+                        <option value="Seleccione">Seleccione</option>
+                        <option value="Reciente">Reciente</option>
+                        <option value="Antigua">Antigua</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="categoria">Categoría</label>
+                    <select class="form-control" id="categoria">
+                        <option value="Seleccione">Seleccione</option>
+                        <option value="Alimentos">Alimentos</option>
+                        <option value="Belleza">Belleza</option>
+                        <option value="Salud">Salud</option>
+                        <option value="Entrenamiento">Entrenamiento</option>
+                        <option value="Aseo">Aseo</option>
+                        <!-- Opciones de categoría -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="precio">Precio</label>
+                    <select class="form-control" id="precio">
+                        <option value="Seleccione">Seleccione</option>
+                        <option value="Mayor">Mayor</option>
+                        <option value="Menor">Menor</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="aplicarFiltrosBtn">Aplicar Filtros</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+ <script>
+        document.getElementById('aplicarFiltrosBtn').addEventListener('click', function() {
+            const cantidad = document.getElementById('cantidad').value;
+            const fecha = document.getElementById('fecha').value;
+            const precio = document.getElementById('precio').value;
+            const categoria = document.getElementById('categoria').value;
+
+            let url = '/products?';
+
+            if (cantidad) url += `cantidad=${cantidad}&`;
+            if (fecha) url += `fecha=${fecha}&`;
+            if (precio) url += `precio=${precio}&`;
+            if (categoria) url += `categoria=${categoria}&`;
+
+            // Eliminar el último '&' si está presente
+            url = url.endsWith('&') ? url.slice(0, -1) : url;
+
+            window.location.href = url;
+        });
+    </script>
+{{else}}
+<h3>Nothing to show</h3>
+{{/if}}
