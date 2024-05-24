@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Verificar cada minuto
-    setInterval(checkForExpiringProducts, 10000);
+    setInterval(checkForExpiringProducts, 5000);
 });
 
 async function markAsInactive(productId, buttonElement) {

@@ -1,6 +1,7 @@
 // chart-area-logic.js
 
 document.addEventListener('DOMContentLoaded', function() {
+if (typeof histogramData !== 'undefined' && histogramData && histogramData.length > 0) {
     // Función para formatear números como dólares
     function number_format(number, decimals, dec_point, thousands_sep) {
         number = (number + '').replace(',', '').replace(' ', '');
@@ -117,4 +118,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+} else {
+    // Si no hay datos disponibles, puedes mostrar un mensaje o realizar alguna otra acción
+    console.log('No hay datos disponibles para generar los gráficos.');
+}
 });

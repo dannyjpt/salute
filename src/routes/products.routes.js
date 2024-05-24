@@ -12,6 +12,12 @@ const router = Router();
         res.status(500).json({message:err.message});
     }
 })*/
+router.get('/registrar', async(req,res)=>{
+    
+        res.render('partials/registrar');
+    
+});
+
 router.get('/products', async (req, res) => {
     try {
         let query = 'SELECT id, nombre, categoría, precio, cantidad, DATE_FORMAT(fechav, "%d-%m-%Y") AS fechav FROM productos';

@@ -84,6 +84,57 @@ app.put('/api/notificacion/:id', async (req, res) => {
     }
 });
 
+app.post('/api/producto', async (req, res) => {
+    const { nombre, categoria, precio, cantidad, fechav } = req.body;
+
+    const connection = await pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        // Insertar el producto en la tabla productos
+        const insertProductoQuery = `
+            INSERT INTO productos (nombre, categoría, precio, cantidad, fechav) 
+            VALUES (?, ?, ?, ?, ?)
+        `;
+        const [result] = await connection.query(insertProductoQuery, [nombre, categoria, precio, cantidad, fechav]);
+
+        // Obtener el ID del producto insertado
+        const productoId = result.insertId;
+
+        // Insertar en la tabla registro_entrada
+        const insertRegistroEntradaQuery = `
+            INSERT INTO registro_entrada (id_producto, cantidad, fecha_entrada) 
+            VALUES (?, ?, NOW())
+        `;
+        await connection.query(insertRegistroEntradaQuery, [productoId, cantidad]);
+
+        // Verificar si la fecha de vencimiento está dentro de los próximos 7 días
+        const now = new Date();
+        const expiringDate = new Date(now);
+        expiringDate.setDate(now.getDate() + 7);
+
+        if (new Date(fechav) <= expiringDate) {
+            // Insertar la notificación en la tabla notificaciones
+            const insertNotificacionQuery = `
+                INSERT INTO notificaciones (id_producto, estado, fechav) 
+                VALUES (?, 'activo', ?)
+            `;
+            await connection.query(insertNotificacionQuery, [productoId, fechav]);
+        }
+
+        await connection.commit();
+        res.render('partials/registrar', { message: 'Producto registrado con éxito' });
+    } catch (error) {
+        await connection.rollback();
+        console.error('Error al registrar el producto:', error);
+        res.status(500).json({ error: 'Error al registrar el producto' });
+    } finally {
+        connection.release();
+    }
+});
+
+
 //Routes
 app.get('/', async (req, res) => {
     try {

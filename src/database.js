@@ -6,7 +6,7 @@ const pool = createPool({
     user: 'sql3708522',
     password: 'zzTWt1A6XP',
     database: 'sql3708522'
-});
+}); 
 /*
 const pool = createPool({
     host: 'localhost',
