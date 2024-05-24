@@ -11,7 +11,6 @@ import { Server } from 'socket.io';
 //Inicialización
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 //Configuración
@@ -33,29 +32,68 @@ app.use(express.json());
 
 // Ruta para obtener productos próximos a vencer
 app.get('/api/vencimiento-alerta', async (req, res) => {
+    const query = `
+      SELECT p.id, p.nombre, p.categoría, p.precio, p.cantidad, DATE_FORMAT(p.fechav, "%Y-%m-%d") AS fechav 
+      FROM productos p
+      LEFT JOIN notificaciones n ON p.id = n.id_producto AND p.fechav = n.fechav
+      WHERE p.fechav BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+        AND (n.id_producto IS NULL OR n.estado = 'activo')
+    `;
+  
     try {
-        const query = `
-            SELECT id, nombre, categoría, precio, cantidad, DATE_FORMAT(fechav, "%d-%m-%Y") AS fechav FROM productos 
-            WHERE fechav BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+      const [productosVencidos] = await pool.query(query);
+      
+  
+      if (productosVencidos.length > 0) {
+        const insertQuery = `
+          INSERT INTO notificaciones (id_producto, fechav, estado) 
+          VALUES (?, ?, 'activo')
+          ON DUPLICATE KEY UPDATE estado = 'activo'
         `;
-        const [results] = await pool.query(query);
-        res.json(results);
-        console.log(results);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+  
+        for (const producto of productosVencidos) {
+          await pool.query(insertQuery, [producto.id, producto.fechav]);
+        }
+      }
+  
+      // Filtramos los productos para excluir aquellos con notificaciones inactivas
+      const filteredProductosVencidos = productosVencidos.filter(producto => !producto.id_notificacion || producto.estado === 'activo');
+      console.log(filteredProductosVencidos);
+      res.json(filteredProductosVencidos);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error al consultar productos vencidos' });
+    }
+  });
+  
+
+  // Ruta para actualizar el estado de la notificación
+app.put('/api/notificacion/:id', async (req, res) => {
+    const { id } = req.params;
+    const { estado } = req.body;
+    console.log(estado);
+    console.log(id);
+    try {
+        const query = 'UPDATE notificaciones SET estado = ? WHERE id_producto = ?';
+        await pool.query(query, [estado, id]);
+
+        res.status(200).json({ message: 'Notificación actualizada correctamente' });
+    } catch (error) {
+        console.error('Error al actualizar la notificación:', error);
+        res.status(500).json({ error: 'Error al actualizar la notificación' });
     }
 });
 
 //Routes
-app.get('/', async (req, res) => { 
-    try { 
+app.get('/', async (req, res) => {
+    try {
         const histogramQuery = ` 
             SELECT p.precio AS precio, 
                    DATE_FORMAT(fecha_salida, "%d-%m-%Y") AS fecha 
             FROM registro_salida rs 
             JOIN productos p ON rs.id_producto = p.id; 
-        `; 
-        const [histogramResult] = await pool.query(histogramQuery); 
+        `;
+        const [histogramResult] = await pool.query(histogramQuery);
 
         const pieChartQuery = ` 
             SELECT p.categoría AS categoria, 
@@ -65,17 +103,17 @@ app.get('/', async (req, res) => {
             GROUP BY p.categoría 
             ORDER BY cantidad_vendida DESC 
             LIMIT 5; 
-        `; 
-        const [pieChartResult] = await pool.query(pieChartQuery); 
+        `;
+        const [pieChartResult] = await pool.query(pieChartQuery);
 
         // Renderiza la vista index y pasa los datos de los gráficos como cadenas JSON 
-        res.render('partials/index', { 
-            histogramData: JSON.stringify(histogramResult), 
-            pieChartData: JSON.stringify(pieChartResult) 
-        }); 
-    } catch (err) { 
-        res.status(500).json({ message: err.message }); 
-    } 
+        res.render('partials/index', {
+            histogramData: JSON.stringify(histogramResult),
+            pieChartData: JSON.stringify(pieChartResult)
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
 
@@ -92,18 +130,3 @@ app.listen(app.get('port'), () =>
 console.log(app.get('views'))
 
 
-
-/*/ Función para consultar la base de datos periódicamente y emitir los datos
-setInterval(async () => {
-    try {
-        const query = `
-            SELECT * FROM productos 
-            WHERE fechav >= CURDATE() AND fechav <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-        `;
-        const [results] = await pool.query(query);
-        io.emit('vencimiento_alerta', results);
-        console.log(results);
-    } catch (err) {
-        console.error('Error al consultar la base de datos:', err.message);
-    }
-}, 10000); // Cada 1 minuto*/
