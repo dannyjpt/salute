@@ -15,6 +15,6 @@ const pool = createPool({
     user: 'root',
     password: '',
     database: 'salutedb'
-});*/
-
+});
+*/
 export default pool;

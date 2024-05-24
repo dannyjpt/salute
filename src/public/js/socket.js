@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (productos.length > 0) {
                 console.log(`Hay ${productos.length} productos próximos a vencer en la próxima semana.`);
                 alert.textContent = productos.length;
+                alert.classList.add('badge-danger');
 
                 // Obtener la fecha actual y formatearla
                 const now = new Date();
@@ -47,6 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             } else {
                 alert.textContent = 0;
+                messageContainer.innerHTML = '<div class="alert alert-success">No hay productos próximos a vencer</div>';
+
+                alert.classList.remove('badge-danger');
             }
         } catch (error) {
             console.error('Error al verificar productos próximos a vencer:', error);

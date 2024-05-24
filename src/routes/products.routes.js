@@ -85,6 +85,7 @@ router.post('/api/producto', async (req, res) => {
             const insertNotificacionQuery = `
                 INSERT INTO notificaciones (id_producto, estado, fechav) 
                 VALUES (?, 'activo', ?)
+                ON DUPLICATE KEY UPDATE estado = 'activo'
             `;
             await connection.query(insertNotificacionQuery, [productoId, fechav]);
         }
